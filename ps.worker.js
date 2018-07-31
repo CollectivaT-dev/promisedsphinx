@@ -59,3 +59,9 @@ function loadPs() {
     config.delete();
     logger.debug('Config destroyed');
 }
+
+function lazyLoad(folders, files) {
+    function preloadFiles() {
+
+    }
+}
