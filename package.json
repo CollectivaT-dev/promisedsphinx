@@ -1,0 +1,11 @@
+{
+  "name": "psjinterface",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "python3 -m http.server 9000"
+  },
+  "author": "Ertugrul Karademir <ekarademir@gmail.com>",
+  "license": "ISC"
+}
