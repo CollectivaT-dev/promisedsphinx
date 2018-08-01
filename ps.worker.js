@@ -1,5 +1,27 @@
-var Module;
-if (typeof Module === 'undefined') Module = eval('(function() { try { return Module || {} } catch(e) { return {} } })()');
+/**
+ * @typedef {Object} FSPath
+ * @property {String} parent
+ * @property {String} name
+ * @property {Boolean} canRead
+ * @property {Boolean} canWrite
+ */
+
+/**
+ * @typedef {Object} FSLazyFile
+ * @property {String} parent
+ * @property {String} name
+ * @property {String} url
+ * @property {Boolean} canRead
+ * @property {Boolean} canWrite
+ */
+
+// },createFolder:function (parent, name, canRead, canWrite) {
+//     var path = PATH.join2(typeof parent === 'string' ? parent : FS.getPath(parent), name);
+//     var mode = FS.getMode(canRead, canWrite);
+//     return FS.mkdir(path, mode);
+//  },createLazyFile:function (parent, name, url, canRead, canWrite) {
+
+var Module = typeof Module !== 'undefined' ? Module : {};
 
 var buffer;
 
@@ -37,11 +59,13 @@ function dispatch(message) {
 function startLoading() {
     logger.debug('Starting runtime init')
 
-    Module.locateFile = () => {
+    if(!Module['preRun']) Module['preRun'] = [];
+
+    Module['locateFile'] = () => {
         return './vendor/pocketsphinx.wasm';
     };
 
-    Module.onRuntimeInitialized = () => {
+    Module['onRuntimeInitialized'] = () => {
         logger.debug('Runtime initialized')
         dispatch({success: true})
     };
@@ -60,8 +84,28 @@ function loadPs() {
     logger.debug('Config destroyed');
 }
 
+/**
+ * @param {FSPath[]} folders
+ * @param {FSLazyFile[]} files
+ */
 function lazyLoad(folders, files) {
     function preloadFiles() {
+        folders.forEach(function(folder) {
+            logger.debug('Lazy loading path', folder.name);
+            Module['FS_createPath'](folder.parent, folder.name, folder.canRead || true, folder.canWrite || true);
+        });
 
+        files.forEach(function(file) {
+            logger.debug('Lazy loading file', file.name);
+            Module['FS_createLazyFile'](file.parent, file.name, file.url, file.canRead || true, file.canWrite || true);
+        });
     }
+    logger.debug('Lazy loading payload');
+    if(Module['calledRun']) {
+        preloadFiles();
+    } else {
+        Module['preRun'].push(preloadFiles);
+    }
+    logger.debug('Lazy loading ends.');
+    dispatch({success: true});
 }
