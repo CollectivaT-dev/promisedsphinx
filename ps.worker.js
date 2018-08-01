@@ -23,7 +23,9 @@
 
 var Module = typeof Module !== 'undefined' ? Module : {};
 
-var buffer;
+var BUFFER,
+    RECOGNIZER,
+    SEGMENTATION;
 
 self.onmessage = (e) => {
     if (e.data.loadlib) {
@@ -78,12 +80,34 @@ function startLoading() {
  * @param {ConfigItem} args
  */
 function loadPs(args) {
-    logger.debug('Loading PS', args);
+    logger.debug('Loading PS');
     var config = new Module.Config();
     logger.debug('Creating buffer');
-    buffer = new Module.AudioBuffer();
+    BUFFER = new Module.AudioBuffer();
 
-    dispatch({success: true});
+    if (args) {
+        args.forEach(function(arg) {
+            config.push_back([arg.key, arg.value]);
+        });
+    }
+
+    var output;
+    if(RECOGNIZER) {
+        output = RECOGNIZER.reInit(config);
+        if (output == RECOGNIZER.ReturnType.BAD_STATE) dispatch({success: false, error: "Can't init Recognizer, BAD_STATE"});
+        else if (output == RECOGNIZER.ReturnType.BAD_ARGUMENT) dispatch({success: false, error: "Can't init Recognizer, BAD_ARGUMENT"});
+        else if (output == RECOGNIZER.ReturnType.RUNTIME_ERROR) dispatch({success: false, error: "Can't init Recognizer, RUNTIME_ERROR"});
+        else dispatch({success: true});
+    } else {
+        logger.debug('Creating Recognizer');
+        RECOGNIZER = new Module.Recognizer(config);
+        logger.debug('Creating Segmentation');
+        SEGMENTATION = new Module.Segmentation();
+
+        if(RECOGNIZER === undefined) dispatch({success: false, error: "Can't init Recognizer, RUNTIME_ERROR"});
+        else dispatch({success: true});
+    }
+
     config.delete();
     logger.debug('Config destroyed');
 }

@@ -37,6 +37,10 @@ let psjs = (function() {
                     res(e.data.payload || true);
                 }
 
+                if(e.data.success === false) {
+                    rej(new Error(e.data.error));
+                }
+
                 rej(new Error(errorMessage));
             }
 
@@ -61,7 +65,7 @@ let psjs = (function() {
      */
     let init = (args) => {
         if(!PS) throw Error("Run initLib first");
-        PS.postMessage({loadps: {args}});
+        PS.postMessage({loadps: args});
         return responseFactory("Can't load library");
     };
 
