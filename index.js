@@ -27,7 +27,7 @@ let psjs = (function() {
     let PS;
 
     /**
-     * Generate a Promise object for simple promise reponses.
+     * Generate a Promise object for simple promise responses.
      * @param {String} errorMessage Message for the Error object to be used while rejecting.
      */
     let responseFactory = (errorMessage) => {
