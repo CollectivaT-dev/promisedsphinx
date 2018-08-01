@@ -17,6 +17,12 @@ let psjs = (function() {
      * @property {Boolean} canWrite
      */
 
+    /**
+     * @typedef {Object} ConfigItem
+     * @property {String} key
+     * @property {String} value
+     */
+
     if(!window.Worker) throw Error("This module can't be used without Worker API.");
     let PS;
 
@@ -51,12 +57,12 @@ let psjs = (function() {
 
     /**
      * Loads the PS library and triggers recognizer init.
+     * @param {ConfigItem} args
      */
-    let init = () => {
-        return initLib().then(() => {
-            PS.postMessage({loadps: true});
-            return responseFactory("Can't load library");
-        });
+    let init = (args) => {
+        if(!PS) throw Error("Run initLib first");
+        PS.postMessage({loadps: {args}});
+        return responseFactory("Can't load library");
     };
 
     /**
@@ -65,11 +71,13 @@ let psjs = (function() {
      * @param {FSLazyFile} files
      */
     let lazyLoad = (folders, files) => {
+        if(!PS) throw Error("Run initLib first");
         PS.postMessage({lazyload: {folders, files}});
         return responseFactory("Can't attach files to file system.");
     }
 
     return {
+        initLib,
         init,
         lazyLoad
     }

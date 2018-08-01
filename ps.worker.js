@@ -15,11 +15,11 @@
  * @property {Boolean} canWrite
  */
 
-// },createFolder:function (parent, name, canRead, canWrite) {
-//     var path = PATH.join2(typeof parent === 'string' ? parent : FS.getPath(parent), name);
-//     var mode = FS.getMode(canRead, canWrite);
-//     return FS.mkdir(path, mode);
-//  },createLazyFile:function (parent, name, url, canRead, canWrite) {
+/**
+ * @typedef {Object} ConfigItem
+ * @property {String} key
+ * @property {String} value
+ */
 
 var Module = typeof Module !== 'undefined' ? Module : {};
 
@@ -31,7 +31,7 @@ self.onmessage = (e) => {
     }
 
     if (e.data.loadps) {
-        loadPs();
+        loadPs(e.data.loadps);
     }
 }
 
@@ -73,8 +73,12 @@ function startLoading() {
     importScripts('./vendor/pocketsphinx.js');
 }
 
-function loadPs() {
-    logger.debug('Loading PS');
+/**
+ * Initialize PS
+ * @param {ConfigItem} args
+ */
+function loadPs(args) {
+    logger.debug('Loading PS', args);
     var config = new Module.Config();
     logger.debug('Creating buffer');
     buffer = new Module.AudioBuffer();

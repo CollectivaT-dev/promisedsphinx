@@ -7,7 +7,10 @@
     <script src="index.js"></script>
     <script>
         window.onload = () => {
-            psjs.init().then((r) => {console.log(r)});
+            psjs.initLib()
+            .then(() => {
+                return psjs.init([{key: '-hmm', value: 'osman'}])
+            });
         };
     </script>
 </head>
