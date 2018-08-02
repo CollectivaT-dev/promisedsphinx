@@ -23,6 +23,12 @@ let psjs = (function() {
      * @property {String} value
      */
 
+    /**
+     * @typedef {Object} Word
+     * @property {String} word
+     * @property {String} pronunciation
+     */
+
     if(!window.Worker) throw Error("This module can't be used without Worker API.");
     let PS;
 
@@ -55,7 +61,7 @@ let psjs = (function() {
      */
     let initLib = () => {
         PS = new Worker('ps.worker.js');
-        PS.postMessage({loadlib: true});
+        PS.postMessage({loadLib: true});
         return responseFactory("Can't load library");
     };
 
@@ -65,25 +71,36 @@ let psjs = (function() {
      */
     let init = (args) => {
         if(!PS) throw Error("Run initLib first");
-        PS.postMessage({loadps: args});
+        PS.postMessage({loadPs: args});
         return responseFactory("Can't load library");
     };
 
     /**
      * Preloads necessary files
-     * @param {FSPath} folders
-     * @param {FSLazyFile} files
+     * @param {FSPath[]} folders
+     * @param {FSLazyFile[]} files
      */
     let lazyLoad = (folders, files) => {
         if(!PS) throw Error("Run initLib first");
-        PS.postMessage({lazyload: {folders, files}});
+        PS.postMessage({lazyLoad: {folders, files}});
         return responseFactory("Can't attach files to file system.");
+    }
+
+    /**
+     * Manually add words and pronunciations to the recognizer.
+     * @param {Word[]} words
+     */
+    let addWords = function(words) {
+        if(!PS) throw Error("Run initLib first");
+        PS.postMessage({addWords: words});
+        return responseFactory("Can't add words to the recognizer.");
     }
 
     return {
         initLib,
         init,
-        lazyLoad
+        lazyLoad,
+        addWords
     }
 
 }());
