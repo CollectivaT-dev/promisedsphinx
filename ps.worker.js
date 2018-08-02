@@ -28,6 +28,22 @@
  */
 
 /**
+ * @typedef {Object} Transition
+ * @property {Number} from
+ * @property {Number} to
+ * @property {Number} logp
+ * @property {String} word
+ */
+
+/**
+ * @typedef {Object} Grammar
+ * @property {Number} start
+ * @property {Number} end
+ * @property {Number} numStates
+ * @property {Transition[]} transitions
+ */
+
+/**
  * We can not interact with emscripten using unicide strings
  * so we need to manually encode and decode them.
  * Thanks to:
@@ -83,6 +99,7 @@ self.onmessage = (e) => {
     else if (e.data.loadPs) loadPs(e.data.loadPs);
     else if (e.data.lazyLoad) lazyLoad(e.data.lazyLoad.folders, e.data.lazyLoad.files);
     else if (e.data.addWords) addWords(e.data.addWords);
+    else if (e.data.addGrammars) addGrammars(e.data.addGrammars);
 }
 
 function Logger() {
@@ -210,4 +227,36 @@ function addWords(words) {
     else dispatch({success: false, error: "Can't add given words list"});
     logger.debug('Deleting wordsVector');
     wordsVector.delete();
+}
+
+/**
+ * Manually add grammar to the recognizer
+ * @param {Grammar[]|Grammar} grammars
+ */
+function addGrammars(grammars) {
+    if(!RECOGNIZER) {
+        dispatch({success: false, error: "Recognizer is not initialized."});
+        return;
+    }
+
+    if(!Array.isArray(grammars)) grammars = [grammars];
+
+    grammars.forEach(function(grammar) {
+        var transitions = new Module.VectorTransitions();
+        var idVector = new Module.Integers();
+
+        grammar.transitions.forEach(function(transition) {
+            transition.word = Utf8Encode( transition.word || '' );
+            transition.logp = transition.logp || 0;
+            transitions.push_back(transition);
+        });
+        grammar.transitions = transitions;
+
+        logger.debug('Adding grammar', grammar);
+        var code = RECOGNIZER.addGrammar(idVector, grammar);
+        if(code == RECOGNIZER.ReturnType.SUCCESS) dispatch({success: true});
+        else dispatch({success: false, error: "Can't add grammar to the list"});
+    });
+
+    logger.debug('Finished adding grammars');
 }

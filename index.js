@@ -29,6 +29,22 @@ let psjs = (function() {
      * @property {String} pronunciation
      */
 
+     /**
+     * @typedef {Object} Transition
+     * @property {Number} from
+     * @property {Number} to
+     * @property {Number} logp
+     * @property {String} word
+     */
+
+    /**
+     * @typedef {Object} Grammar
+     * @property {Number} start
+     * @property {Number} end
+     * @property {Number} numStates
+     * @property {Transition[]} transitions
+     */
+
     if(!window.Worker) throw Error("This module can't be used without Worker API.");
     let PS;
 
@@ -96,11 +112,22 @@ let psjs = (function() {
         return responseFactory("Can't add words to the recognizer.");
     }
 
+    /**
+     * Manually add words and pronunciations to the recognizer.
+     * @param {Grammar[]|Grammar} grammars
+     */
+    let addGrammars = function(grammars) {
+        if(!PS) throw Error("Run initLib first");
+        PS.postMessage({addGrammars: grammars});
+        return responseFactory("Can't add grammars to the recognizer.");
+    }
+
     return {
         initLib,
         init,
         lazyLoad,
-        addWords
+        addWords,
+        addGrammars
     }
 
 }());
