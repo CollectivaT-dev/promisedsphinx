@@ -117,11 +117,22 @@ function Logger() {
         console.log.apply(this, msg);
     }
 }
-const logger = new Logger()
+var logger = new Logger()
 
 function dispatch(message) {
     self.postMessage(message);
 }
+
+function checkRecognizer() {
+    if(!RECOGNIZER) {
+        dispatch({success: false, error: "Recognizer is not initialized."});
+        return false;
+    }
+
+    return true;
+}
+
+var RETURNTYPES;
 
 /**
  * Loads PS and WASM code for PS
@@ -136,6 +147,17 @@ function startLoading() {
     };
 
     Module['onRuntimeInitialized'] = () => {
+        var SUCCESS = Module.ReturnType.SUCCESS,
+            BAD_STATE = Module.ReturnType.BAD_STATE,
+            BAD_ARGUMENT = Module.ReturnType.BAD_ARGUMENT,
+            RUNTIME_ERROR = Module.ReturnType.RUNTIME_ERROR;
+        RETURNTYPES = {
+            SUCCESS : 'SUCCESS',
+            BAD_STATE: 'BAD_STATE',
+            BAD_ARGUMENT: 'BAD_ARGUMENT',
+            RUNTIME_ERROR: 'RUNTIME_ERROR'
+        }
+
         logger.debug('Runtime initialized')
         dispatch({success: true})
     };
@@ -162,10 +184,8 @@ function loadPs(args) {
     var code;
     if(RECOGNIZER) {
         code = RECOGNIZER.reInit(config);
-        if (code == RECOGNIZER.ReturnType.BAD_STATE) dispatch({success: false, error: "Can't init Recognizer, BAD_STATE"});
-        else if (code == RECOGNIZER.ReturnType.BAD_ARGUMENT) dispatch({success: false, error: "Can't init Recognizer, BAD_ARGUMENT"});
-        else if (code == RECOGNIZER.ReturnType.RUNTIME_ERROR) dispatch({success: false, error: "Can't init Recognizer, RUNTIME_ERROR"});
-        else dispatch({success: true});
+        if(code == Module.ReturnType.SUCCESS) dispatch({success: true});
+        else dispatch({success: false, error: `Can't init Recognizer, ${RETURNTYPES[code]}`});
     } else {
         logger.debug('Creating Recognizer');
         RECOGNIZER = new Module.Recognizer(config);
@@ -185,6 +205,8 @@ function loadPs(args) {
  * @param {FSLazyFile[]} files
  */
 function lazyLoad(folders, files) {
+    if(!checkRecognizer()) return;
+
     function preloadFiles() {
         folders.forEach(function(folder) {
             logger.debug('Lazy loading path', folder.name);
@@ -211,10 +233,7 @@ function lazyLoad(folders, files) {
  * @param {Word[]} words
  */
 function addWords(words) {
-    if(!RECOGNIZER) {
-        dispatch({success: false, error: "Recognizer is not initialized."});
-        return;
-    }
+    if(!checkRecognizer()) return;
 
     logger.debug('Adding words.');
     var wordsVector = new Module.VectorWords();
@@ -234,10 +253,7 @@ function addWords(words) {
  * @param {Grammar[]|Grammar} grammars
  */
 function addGrammars(grammars) {
-    if(!RECOGNIZER) {
-        dispatch({success: false, error: "Recognizer is not initialized."});
-        return;
-    }
+    if(!checkRecognizer()) return;
 
     if(!Array.isArray(grammars)) grammars = [grammars];
 
@@ -259,4 +275,37 @@ function addGrammars(grammars) {
     });
 
     logger.debug('Finished adding grammars');
+}
+
+/**
+ * Starts up listenning process of the recognizer
+ * @param {Number} grammarIdx Index of the added grammar
+ */
+function listen(grammarIdx) {
+    if(!checkRecognizer()) return;
+
+    var code = RECOGNIZER.switchSearch(grammarIdx);
+    if (code != Module.ReturnType.SUCCESS) {
+        dispatch({success: false, error: "Can't switch grammar"});
+        return;
+    }
+
+    code = RECOGNIZER.start();
+    if (code != Module.ReturnType.SUCCESS) dispatch({success: false, error: `Can't start listenning, ${RETURNTYPES[code]}`});
+    else dispatch({success: true});
+}
+
+/**
+ * Stops recognizer.
+ */
+function stop() {
+    if(!checkRecognizer()) return;
+
+    code = RECOGNIZER.stop();
+    if (code != Module.ReturnType.SUCCESS) dispatch({success: false, error: `Can't stop recognizer, ${RETURNTYPES[code]}`});
+    else dispatch({success: true});
+}
+
+function recognize() {
+
 }
