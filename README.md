@@ -2,6 +2,11 @@ Promise based interface around [pocketsphinx.js](https://github.com/syl22-00/poc
 
 Still in dev
 
+# TODO
+* Recognizer function
+* Recorder interface
+* Tests
+
 # Roadmap
 * Wrap `Promise` around async calls to pocketsphinx.js `Worker`
 * Modify and recompile pocketsphinx.js from pocketsphinx based on usage needs
