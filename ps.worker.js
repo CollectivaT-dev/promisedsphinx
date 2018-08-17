@@ -242,7 +242,7 @@ function addWords(words) {
     });
 
     var code = RECOGNIZER.addWords(wordsVector);
-    if(code == RECOGNIZER.ReturnType.SUCCESS) dispatch({success: true});
+    if(code == Module.ReturnType.SUCCESS) dispatch({success: true});
     else dispatch({success: false, error: "Can't add given words list"});
     logger.debug('Deleting wordsVector');
     wordsVector.delete();
@@ -270,7 +270,7 @@ function addGrammars(grammars) {
 
         logger.debug('Adding grammar', grammar);
         var code = RECOGNIZER.addGrammar(idVector, grammar);
-        if(code == RECOGNIZER.ReturnType.SUCCESS) dispatch({success: true});
+        if(code == Module.ReturnType.SUCCESS) dispatch({success: true});
         else dispatch({success: false, error: "Can't add grammar to the list"});
     });
 
