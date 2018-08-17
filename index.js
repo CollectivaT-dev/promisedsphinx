@@ -113,7 +113,7 @@ let psjs = (function() {
     }
 
     /**
-     * Manually add words and pronunciations to the recognizer.
+     * Manually add grammars to the recognizer.
      * @param {Grammar[]|Grammar} grammars
      */
     let addGrammars = function(grammars) {
