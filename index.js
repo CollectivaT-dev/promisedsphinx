@@ -87,7 +87,7 @@ let psjs = (function() {
      */
     let init = (args) => {
         if(!PS) throw Error("Run initLib first");
-        PS.postMessage({loadPs: args});
+        PS.postMessage({loadPs: args || true});
         return responseFactory("Can't load library");
     };
 

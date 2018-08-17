@@ -175,7 +175,7 @@ function loadPs(args) {
     logger.debug('Creating buffer');
     BUFFER = new Module.AudioBuffer();
 
-    if (args) {
+    if (Array.isArray(args)) {
         args.forEach(function(arg) {
             config.push_back([arg.key, arg.value]);
         });
