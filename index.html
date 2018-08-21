@@ -100,7 +100,7 @@
         };
 
         window.onload = () => {
-            psjs.initLib()
+            let ps = psjs.initLib()
             .then(() => {
                 return psjs.init();
             })
@@ -110,6 +110,12 @@
             .then(() => {
                 return psjs.addGrammars(grammarOses);
             });
+            let rec = audio.init()
+            .then(() => {
+                return audio.startRecording();
+            });
+
+            Promise.all([ps, rec]);
         };
     </script>
 </head>
