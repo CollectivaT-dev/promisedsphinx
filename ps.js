@@ -1,4 +1,4 @@
-let psjs = (function() {
+let psjs = (function(PS) {
     'use strict';
     /**
      * @typedef {Object} FSPath
@@ -46,7 +46,6 @@ let psjs = (function() {
      */
 
     if(!window.Worker) throw Error("This module can't be used without Worker API.");
-    let PS;
 
     /**
      * Generate a Promise object for simple promise responses.
