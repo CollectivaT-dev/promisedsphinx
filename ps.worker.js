@@ -1,6 +1,6 @@
 /**
- * @typedef {Object} FSPath
  * @property {String} parent
+ * @typedef {Object} FSPath
  * @property {String} name
  * @property {Boolean} canRead
  * @property {Boolean} canWrite
@@ -84,11 +84,27 @@ function Utf8Decode(strUtf) {
     return strUni;
 }
 
+/**
+ * @param {Module.Segmentation} segmentation
+ */
+function segToArray(segmentation) {
+    var output = [];
+    for (var i = 0 ; i < segmentation.size() ; i++)
+        output.push({
+            'word': Utf8Decode(segmentation.get(i).word),
+            'start': segmentation.get(i).start,
+            'end': segmentation.get(i).end
+        });
+    return output;
+};
+
 var Module = typeof Module !== 'undefined' ? Module : {};
 
 var BUFFER,
     RECOGNIZER,
     SEGMENTATION;
+
+const _grammarPointers = [];
 
 /**
  * Incoming signal dispatcher
@@ -100,6 +116,9 @@ self.onmessage = (e) => {
     else if (e.data.lazyLoad) lazyLoad(e.data.lazyLoad.folders, e.data.lazyLoad.files);
     else if (e.data.addWords) addWords(e.data.addWords);
     else if (e.data.addGrammars) addGrammars(e.data.addGrammars);
+    else if (e.data.start) start(e.data.start);
+    else if (e.data.stop) stop(e.data.stop);
+    else if (e.data.recognize) recognize(e.data.recognize);
 }
 
 function Logger() {
@@ -270,8 +289,12 @@ function addGrammars(grammars) {
 
         logger.debug('Adding grammar', grammar);
         var code = RECOGNIZER.addGrammar(idVector, grammar);
+        _grammarPointers.push(idVector.get(0));
+        logger.debug('Grammar added returned pointer', idVector.get(0));
         if(code == Module.ReturnType.SUCCESS) dispatch({success: true});
         else dispatch({success: false, error: "Can't add grammar to the list"});
+        transitions.delete();
+        idVector.delete();
     });
 
     logger.debug('Finished adding grammars');
@@ -281,10 +304,11 @@ function addGrammars(grammars) {
  * Starts up listenning process of the recognizer
  * @param {Number} grammarIdx Index of the added grammar
  */
-function listen(grammarIdx) {
+function start(grammarIdx) {
+    grammarIdx = parseInt(grammarIdx || 0);
     if(!checkRecognizer()) return;
 
-    var code = RECOGNIZER.switchSearch(grammarIdx);
+    let code = RECOGNIZER.switchSearch(_grammarPointers[grammarIdx]);
     if (code != Module.ReturnType.SUCCESS) {
         dispatch({success: false, error: "Can't switch grammar"});
         return;
@@ -301,11 +325,24 @@ function listen(grammarIdx) {
 function stop() {
     if(!checkRecognizer()) return;
 
-    code = RECOGNIZER.stop();
+    let code = RECOGNIZER.stop();
     if (code != Module.ReturnType.SUCCESS) dispatch({success: false, error: `Can't stop recognizer, ${RETURNTYPES[code]}`});
     else dispatch({success: true});
 }
 
-function recognize() {
+function recognize(arrayBuffer) {
+    let audioData = new Int16Array(arrayBuffer);
+    while(BUFFER.size() < audioData.length) BUFFER.push_back(0);
 
+    for (let i = 0; i < audioData.length; ++i) BUFFER.set(i, audioData[i]);
+    let code = RECOGNIZER.process(BUFFER);
+    if (code != Module.ReturnType.SUCCESS) dispatch({success: false, error: `Error processing the audio, ${RETURNTYPES[code]}`});
+    else {
+        RECOGNIZER.getHypseg(SEGMENTATION);
+        let result = {
+            hypothesis: Utf8Decode(RECOGNIZER.getHyp()),
+            hypothesisSegment: segToArray(SEGMENTATION)
+        }
+        dispatch(result);
+    }
 }

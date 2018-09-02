@@ -110,12 +110,13 @@
             .then(() => {
                 return psjs.addGrammars(grammarOses);
             });
-            let rec = audio.init()
-            .then(() => {
-                return audio.startRecording();
-            });
 
-            Promise.all([ps, rec]);
+            Promise.all([ps, AudioProcessor.init()]).then((items) => {
+                let audio = items[1];
+                psjs.start().then(() => {
+                    psjs.withMicrophone(audio);
+                })
+            });
         };
     </script>
 </head>

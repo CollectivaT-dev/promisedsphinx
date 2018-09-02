@@ -121,12 +121,54 @@ let psjs = (function(PS) {
         return responseFactory("Can't add grammars to the recognizer.");
     }
 
+    /**
+     * Send start signal to PS
+     */
+    let start = function() {
+        if(!PS) throw Error("Run initLib first");
+        PS.postMessage({start: '0'});
+        return responseFactory("Can't start the recognizer.");
+    }
+
+    /**
+     * @param {Float32Array} inputBuffer
+     * @returns {Int16Array} Buffer to be sent directly to PS.
+     */
+    let _prepRecordedData = function _prepRecordedData(inputBuffer) {
+        let output = new Int16Array(inputBuffer.length);
+        for (let i = 0; i < inputBuffer.length; ++i) {
+            output[i] = inputBuffer[i] * 16383.0;
+        }
+
+        return output;
+    }
+
+    /**
+     *
+     * @param {AudioProcessor} audio Initialized AudioProcessor module
+     */
+    let withMicrophone = function(audio) {
+        PS.onmessage = function(e) {
+            console.log(e.data.hypothesis);
+        }
+        let dispatcher = function(input) {
+            let payload = {
+                recognize: _prepRecordedData(input).buffer
+            };
+            // Send payload.recognize as a transferrable object for speed.
+            PS.postMessage(payload, [payload.recognize]);
+        }
+        audio.mic(dispatcher);
+    }
+
     return {
         initLib,
         init,
         lazyLoad,
         addWords,
-        addGrammars
+        addGrammars,
+        start,
+        withMicrophone
     }
 
 }());
