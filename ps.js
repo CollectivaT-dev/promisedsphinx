@@ -147,7 +147,7 @@ let psjs = (function(PS) {
      *
      * @param {AudioProcessor} audio Initialized AudioProcessor module
      */
-    let withMicrophone = function(audio) {
+    let withMicrophone = (audio) => {
         PS.onmessage = function(e) {
             console.log(e.data.hypothesis);
         }
