@@ -45,6 +45,12 @@ let psjs = (function(PS) {
      * @property {Transition[]} transitions
      */
 
+    /**
+     * @typedef {Object} BufferDataProps
+     * @property {Number} sampleRate
+     * @property {Number} bufferSize
+     */
+
     if(!window.Worker) throw Error("This module can't be used without Worker API.");
 
     /**
@@ -132,9 +138,10 @@ let psjs = (function(PS) {
 
     /**
      * @param {Float32Array} inputBuffer
+     * @param {BufferDataProps} props
      * @returns {Int16Array} Buffer to be sent directly to PS.
      */
-    let _prepRecordedData = function _prepRecordedData(inputBuffer) {
+    let _prepRecordedData = function _prepRecordedData(inputBuffer, props) {
         let output = new Int16Array(inputBuffer.length);
         for (let i = 0; i < inputBuffer.length; ++i) {
             output[i] = inputBuffer[i] * 16383.0;
@@ -151,9 +158,9 @@ let psjs = (function(PS) {
         PS.onmessage = function(e) {
             console.log(e.data.hypothesis);
         }
-        let dispatcher = function(input) {
+        let dispatcher = function(input, props) {
             let payload = {
-                recognize: _prepRecordedData(input).buffer
+                recognize: _prepRecordedData(input, props).buffer
             };
             // Send payload.recognize as a transferrable object for speed.
             PS.postMessage(payload, [payload.recognize]);

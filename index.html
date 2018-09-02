@@ -108,7 +108,7 @@
                 return psjs.addWords(words);
             })
             .then(() => {
-                return psjs.addGrammars(grammarOses);
+                return psjs.addGrammars(grammarCities);
             });
 
             Promise.all([ps, AudioProcessor.init()]).then((items) => {
