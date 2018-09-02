@@ -16,7 +16,7 @@ let AudioProcessor = (function (Context, Processor, _dispatch) {
     }
 
     /**
-     * @param {Function} dispatcher Data dispatch handler that sends data to the worker accepts Float32Array.
+     * @param {Function} dispatcher Data dispatch handler that sends data to the worker and accepts Float32Array.
      */
     let mic = function mic(dispatcher) {
         return navigator.mediaDevices.getUserMedia({audio: true})

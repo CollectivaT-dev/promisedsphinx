@@ -3,8 +3,9 @@ Promise based interface around [pocketsphinx.js](https://github.com/syl22-00/poc
 Still in dev
 
 # TODO
-* Recorder interface
-* Recognizer function
+* ~~Recorder interface~~
+* ~~Recognizer function~~
+* Handle silence gracefully
 * Tests
 
 # Roadmap
